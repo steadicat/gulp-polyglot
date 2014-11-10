@@ -1,0 +1,36 @@
+{
+  "name": "gulp-polyglot",
+  "version": "0.0.1",
+  "description": "Gulp plugin to extract strings from a JSX codebase for translation",
+  "main": "index.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/steadicat/gulp-polyglot.git"
+  },
+  "keywords": [
+    "gulpplugin",
+    "translation",
+    "internationalization",
+    "localization",
+    "i18n",
+    "l10n",
+    "react",
+    "jsx"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/steadicat/gulp-polyglot/issues"
+  },
+  "homepage": "https://github.com/steadicat/gulp-polyglot",
+  "devDependencies": {
+  },
+  "dependencies": {
+    "Set": "0.4.1",
+    "esprima": "1.2.2",
+    "gulp-util": "3.0.1",
+    "merge": "1.2.0",
+    "through2": "0.6.3"
+  }
+}
