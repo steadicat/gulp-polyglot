@@ -4,6 +4,7 @@
   "description": "Gulp plugin to extract strings from a JSX codebase for translation",
   "main": "index.js",
   "scripts": {
+    "test": "./node_modules/mocha/bin/mocha test.js"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,7 @@
   },
   "homepage": "https://github.com/steadicat/gulp-polyglot",
   "devDependencies": {
+    "mocha": "2.1.0"
   },
   "dependencies": {
     "Set": "0.4.1",
