@@ -16,8 +16,11 @@ function truthy(a) {
   return !!a;
 }
 
-function isTranslationFunctionCall(functionName, code) {
-  return isIdentifierCall(functionName, code) || isMemberExpressionCall(functionName, code);
+function isTranslationFunctionCall(options, code) {
+  if (options.onlyMethodCall) return isMemberExpressionCall(options.functionName, code);
+  if (options.onlyFunctionCall) return isIdentifierCall(options.functionName, code);
+  return isIdentifierCall(options.functionName, code)
+    || isMemberExpressionCall(options.functionName, code);
 }
 
 function isIdentifierCall(functionName, code) {
@@ -84,9 +87,9 @@ function traverse(unpacker, depth, code) {
     .reduce(concat, [{code: code, depth: depth}]);
 }
 
-function extractStrings(code, functionName) {
+function extractStrings(code, options) {
   return traverse(defaultUnpacker, 0, code)
-    .filter(isTranslationFunctionCall.bind(null, functionName))
+    .filter(isTranslationFunctionCall.bind(null, options))
     .map(extractText);
 }
 
@@ -113,7 +116,7 @@ module.exports = function(input, languages, options) {
   var strings = new Set();
   return through2.obj(function(file, enc, next) {
     var parsed = esprima.parse(file.contents);
-    extractStrings(parsed, options.functionName).forEach(function(s) {
+    extractStrings(parsed, options).forEach(function(s) {
       strings.add(s);
     });
     next();
