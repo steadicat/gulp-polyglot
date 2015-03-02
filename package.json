@@ -1,6 +1,6 @@
 {
   "name": "gulp-polyglot",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Gulp plugin to extract strings from a JSX codebase for translation",
   "main": "index.js",
   "scripts": {
