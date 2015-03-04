@@ -1,5 +1,5 @@
 var through2 = require('through2');
-var esprima = require('esprima');
+var acorn = require('acorn');
 var path = require('path');
 var fs = require('fs');
 var merge = require('merge');
@@ -115,7 +115,7 @@ module.exports = function(input, languages, options) {
   options = options || {};
   var strings = new Set();
   return through2.obj(function(file, enc, next) {
-    var parsed = esprima.parse(file.contents);
+    var parsed = acorn.parse(file.contents, {ecmaVersion: 6});
     extractStrings(parsed, options).forEach(function(s) {
       strings.add(s);
     });
