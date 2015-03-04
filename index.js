@@ -17,29 +17,39 @@ function truthy(a) {
 }
 
 function isTranslationFunctionCall(options, code) {
-  if (options.onlyMethodCall) return isMemberExpressionCall(options.functionName, code);
-  if (options.onlyFunctionCall) return isIdentifierCall(options.functionName, code);
-  return isIdentifierCall(options.functionName, code)
-    || isMemberExpressionCall(options.functionName, code);
+  code = code.code;
+  if (options.onlyMethodCall) return isMemberExpressionCall(code, options);
+  if (options.onlyFunctionCall) return isIdentifierCall(code, options);
+  return isIdentifierCall(code, options)
+    || isMemberExpressionCall(code, options);
 }
 
-function isIdentifierCall(functionName, code) {
-  code = code.code;
+function isIdentifierCall(code, options) {
   // code && code.type && console.log('code.type: ', code.type);
   return code.type &&
-         code.type === 'CallExpression' &&
-         code.callee.type === 'Identifier' &&
-         code.callee.name === (functionName || DEFAULT_TRANSLATION_FUNCTION);
+    code.type === 'CallExpression' &&
+    code.callee.type === 'Identifier' &&
+    code.callee.name === (options.functionOrMethodName || DEFAULT_TRANSLATION_FUNCTION);
 }
 
-function isMemberExpressionCall(functionName, code) {
-  code = code.code;
+function isMemberExpressionCall(code, options) {
   // code && code.type && code.callee.type === 'MemberExpression' &&
   //   console.log('name: ', code.callee.property.name);
-  return code &&
+  if (options.objectName && !matchObjectName(code, options.objectName)) {
+    return false;
+  }
+  return matchObjectName &&
+    code &&
     code.type === 'CallExpression' &&
     code.callee.type === 'MemberExpression' &&
-    code.callee.property.name === (functionName || DEFAULT_TRANSLATION_FUNCTION);
+    code.callee.property.name === (options.functionOrMethodName || DEFAULT_TRANSLATION_FUNCTION);
+}
+
+function matchObjectName(code, objectName) {
+  return  code &&
+    code.type === 'CallExpression' &&
+    code.callee.type === 'MemberExpression' &&
+    code.callee.object.name === objectName;
 }
 
 function textUnpacker(code) {

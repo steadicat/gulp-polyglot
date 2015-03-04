@@ -75,7 +75,7 @@ describe('gulp-polyglot', function() {
     var stream, fakeFile;
 
     beforeEach(function() {
-      stream = polyglot('./', ['it', 'en'], {functionName: 'locale'});
+      stream = polyglot('./', ['it', 'en'], {functionOrMethodName: 'locale'});
       fakeFile = new gutil.File({
         contents: new Buffer(contents)
       });
@@ -120,6 +120,50 @@ describe('gulp-polyglot', function() {
 
     beforeEach(function() {
       stream = polyglot('./', ['it'], {onlyFunctionCall: true});
+      fakeFile = new gutil.File({
+        contents: new Buffer(contents)
+      });
+    });
+
+    it('should return an empty JSON string', function(done) {
+      stream.on('data', function(file){
+        var obj = JSON.parse(file.contents.toString());
+        assert.deepEqual(obj, {});
+      });
+      stream.write(fakeFile);
+      stream.end(done);
+    });
+
+  });
+
+  describe('when given a method call and the object name', function() {
+    var contents = "req.t('five');";
+    var stream, fakeFile;
+
+    beforeEach(function() {
+      stream = polyglot('./', ['it'], {onlyMethodCall: true, objectName: 'req'});
+      fakeFile = new gutil.File({
+        contents: new Buffer(contents)
+      });
+    });
+
+    it('should return the JSON string', function(done) {
+      stream.on('data', function(file){
+        var obj = JSON.parse(file.contents.toString());
+        assert.deepEqual(obj, {'five': ''});
+      });
+      stream.write(fakeFile);
+      stream.end(done);
+    });
+
+  });
+
+  describe('when given a method call and the wrong object name', function() {
+    var contents = "req.t('five');";
+    var stream, fakeFile;
+
+    beforeEach(function() {
+      stream = polyglot('./', ['it'], {onlyMethodCall: true, objectName: 'foo'});
       fakeFile = new gutil.File({
         contents: new Buffer(contents)
       });
