@@ -1,9 +1,10 @@
 {
   "name": "gulp-polyglot",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Gulp plugin to extract strings from a JSX codebase for translation",
   "main": "index.js",
   "scripts": {
+    "test": "./node_modules/mocha/bin/mocha test.js"
   },
   "repository": {
     "type": "git",
@@ -25,10 +26,11 @@
   },
   "homepage": "https://github.com/steadicat/gulp-polyglot",
   "devDependencies": {
+    "mocha": "2.1.0"
   },
   "dependencies": {
     "Set": "0.4.1",
-    "esprima": "1.2.2",
+    "acorn-babel": "0.11.1-37",
     "gulp-util": "3.0.1",
     "merge": "1.2.0",
     "through2": "0.6.3"

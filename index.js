@@ -1,12 +1,12 @@
 var through2 = require('through2');
-var esprima = require('esprima');
+var acornBabel = require('acorn-babel');
 var path = require('path');
 var fs = require('fs');
 var merge = require('merge');
 var Set = require('Set');
 var gutil = require('gulp-util');
 
-var TRANSLATION_FUNCTION = 't';
+var DEFAULT_TRANSLATION_FUNCTION = 't';
 
 function concat(a, b) {
   return a.concat(b);
@@ -16,13 +16,40 @@ function truthy(a) {
   return !!a;
 }
 
-function isTranslationFunctionCall(code) {
-  //code && code.callee && code.callee.name && console.log(code.callee.name);
+function isTranslationFunctionCall(options, code) {
   code = code.code;
+  if (options.onlyMethodCall) return isMemberExpressionCall(code, options);
+  if (options.onlyFunctionCall) return isIdentifierCall(code, options);
+  return isIdentifierCall(code, options)
+    || isMemberExpressionCall(code, options);
+}
+
+function isIdentifierCall(code, options) {
+  // code && code.type && console.log('code.type: ', code.type);
   return code.type &&
-         code.type === 'CallExpression' &&
-         code.callee.type === 'Identifier' &&
-         code.callee.name === TRANSLATION_FUNCTION;
+    code.type === 'CallExpression' &&
+    code.callee.type === 'Identifier' &&
+    code.callee.name === (options.functionOrMethodName || DEFAULT_TRANSLATION_FUNCTION);
+}
+
+function isMemberExpressionCall(code, options) {
+  // code && code.type && code.callee.type === 'MemberExpression' &&
+  //   console.log('name: ', code.callee.property.name);
+  if (options.objectName && !matchObjectName(code, options.objectName)) {
+    return false;
+  }
+  return matchObjectName &&
+    code &&
+    code.type === 'CallExpression' &&
+    code.callee.type === 'MemberExpression' &&
+    code.callee.property.name === (options.functionOrMethodName || DEFAULT_TRANSLATION_FUNCTION);
+}
+
+function matchObjectName(code, objectName) {
+  return  code &&
+    code.type === 'CallExpression' &&
+    code.callee.type === 'MemberExpression' &&
+    code.callee.object.name === objectName;
 }
 
 function textUnpacker(code) {
@@ -65,11 +92,15 @@ function defaultUnpacker(code) {
 
 function traverse(unpacker, depth, code) {
   if (!code) return [];
-  return unpacker(code).map(traverse.bind(null, unpacker, depth+1)).reduce(concat, [{code: code, depth: depth}]);
+  return unpacker(code)
+    .map(traverse.bind(null, unpacker, depth+1))
+    .reduce(concat, [{code: code, depth: depth}]);
 }
 
-function extractStrings(code) {
-  return traverse(defaultUnpacker, 0, code).filter(isTranslationFunctionCall).map(extractText);
+function extractStrings(code, options) {
+  return traverse(defaultUnpacker, 0, code)
+    .filter(isTranslationFunctionCall.bind(null, options))
+    .map(extractText);
 }
 
 function toXliff(strings) {
@@ -90,11 +121,12 @@ function toXliff(strings) {
     ]).join('\n');
 }
 
-module.exports = function(output, languages) {
+module.exports = function(input, languages, options) {
+  options = options || {};
   var strings = new Set();
   return through2.obj(function(file, enc, next) {
-    var parsed = esprima.parse(file.contents);
-    extractStrings(parsed).forEach(function(s) {
+    var parsed = acornBabel.parse(file.contents, {ecmaVersion: 7});
+    extractStrings(parsed, options).forEach(function(s) {
       strings.add(s);
     });
     next();
@@ -105,14 +137,14 @@ module.exports = function(output, languages) {
         obj[s] = "";
         return obj;
       }, {});
-      fs.readFile(path.join(output, language + '.json'), function(err, data) {
+      fs.readFile(path.join(input, language + '.json'), function(err, data) {
         if (err) {
           data = '{}';
         }
         var langStrings = merge(enStrings, JSON.parse(data));
         out.push(new gutil.File({
-          base: output,
-          path: path.join(output, language + '.json'),
+          base: input,
+          path: path.join(input, language + '.json'),
           contents: new Buffer(JSON.stringify(langStrings, null, 2))
         }));
       });
